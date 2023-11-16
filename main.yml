@@ -2,6 +2,8 @@ name: ecr push image
 
 on:
   push:
+    tags:
+      - v*  # 'v' で始まるタグに反応（例: v1.0.0）
 
 jobs:
   push:
@@ -10,28 +12,39 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    # github actionを止める／再開する場合は削除
+    if: false
     steps:
+      - name: Checkout code
       - uses: actions/checkout@v3
 
       # AWS 認証
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ap-northeast-1
-          role-to-assume: "arn:aws:iam::843728218403:user/arai-t"
+          role-to-assume: arn:aws:iam::747280103911:user/tenten
+          role-session-name: GitHubActions
 
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
         id: login-ecr
+        with:
+          mask-password: false
+          registry-type: private
+          skip-logout: false
+
 
       # Docker イメージを build・push する
       - name: build and push docker image to ecr
         env:
-          # ECR レジストリを `aws-actions/amazon-ecr-login` アクションの `outputs.registry` から取得
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          # イメージを push する ECR リポジトリ名を GitHub リポジトリ名から取得
-          REPOSITORY: ${{ github.repository }}
-          # 任意のイメージタグ
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          REPOSITORY_NAME=$(basename ${{ github.repository }})
+          IMAGE_NAME="${REGISTRY}/${REPOSITORY_NAME}:${IMAGE_TAG}"
+          docker build -t ${IMAGE_NAME} . -f docker/Dockerfile
+          docker push ${IMAGE_NAME}
+          aws lambda update-function-code --function-name ${REPOSITORY_NAME} --image-uri 747280103911.dkr.ecr.ap-northeast-1.amazonaws.com/${REPOSITORY_NAME}:${IMAGE_TAG} --region ap-northeast-1 --no-cli-pager
+
