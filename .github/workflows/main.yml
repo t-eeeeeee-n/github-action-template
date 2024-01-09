@@ -17,7 +17,7 @@ jobs:
       - id: extract-repo-name
         run: |
           repository_name=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)
-          echo "REPOSITORY_NAME=${repository_name}" >> $GITHUB_ENV
+          echo "::set-output name=repository-name::${repository_name}"
 
   push:
     if: ${{ needs.extract-commit-message.outputs.repository-name != ''}}
