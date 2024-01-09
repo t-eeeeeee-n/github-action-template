@@ -16,15 +16,8 @@ jobs:
       - uses: actions/checkout@v3
       - id: extract-repo-name
         run: |
-          commit_message=$(git log -1 --pretty=%B)
-          echo "Commit message: $commit_message"
-          repository_name=$(echo "$commit_message" | grep -oP '(?<=<).*(?=>)' || true)
-          if [[ -z "$repository_name" ]]; then
-            echo "Repository name not found in commit message"
-            echo "::set-output name=repository-name::"
-          else
-            echo "::set-output name=repository-name::${repository_name}"
-          fi
+          repository_name=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)" >> $GITHUB_ENV
+          echo "::set-output name=repository-name::${repository_name}"
 
   push:
     if: ${{ needs.extract-commit-message.outputs.repository-name != ''}}
