@@ -74,7 +74,7 @@ jobs:
           REPOSITORY_NAME=${{ needs.push.outputs.repository-name }}
           IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${REPOSITORY_NAME}:${{ github.sha }}"
           aws cloudformation deploy \
-            --template-file ${REPOSITORY_NAME}/cloudformation/cloudformation-template.yaml \
+            --template-file cloudformation/cloudformation-template.yaml \
             --stack-name ${REPOSITORY_NAME} \
             --parameter-overrides ImageUri=${IMAGE_URI} FunctionName=${REPOSITORY_NAME} \
             --capabilities CAPABILITY_IAM
