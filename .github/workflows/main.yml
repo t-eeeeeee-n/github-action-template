@@ -47,7 +47,7 @@ jobs:
         run: |
           REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
           IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${REPOSITORY_NAME}:${{ github.sha }}"
-          docker build -t ${IMAGE_URI} ./${REPOSITORY_NAME} -f $./docker/Dockerfile
+          docker build -t ${IMAGE_URI} . -f $./docker/Dockerfile
           docker push ${IMAGE_URI}
           
           echo "::set-output name=repository-name::${REPOSITORY_NAME}"
