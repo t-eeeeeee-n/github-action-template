@@ -1,8 +1,15 @@
 version: '3.11'
+
 services:
-  app:
-    build: .
-    tty: true
+  python:
+    container_name: python-container
+    image: "python-container"
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
     volumes:
       - ./src:/var/task
-    working_dir: /var/task
+      - ./docker/requirements.txt:/tmp/requirements.txt
+    tty: true
+    env_file:
+      - .env
