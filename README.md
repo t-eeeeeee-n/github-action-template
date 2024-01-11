@@ -14,31 +14,31 @@
     - `AWS_ACCESS_KEY_ID`: [アクセスキーID]
     - `AWS_SECRET_ACCESS_KEY`: [シークレットアクセスキー]
 
-2. **ECRのリポジトリに許可を追加**
-- IAMポリシー例:
-   ```json
-   {
-       "Version": "2008-10-17",
-       "Statement": [
-         {
-           "Sid": "LambdaECRImageRetrievalPolicy",
-           "Effect": "Allow",
-           "Principal": {
-             "Service": "lambda.amazonaws.com"
-           },
-           "Action": [
-             "ecr:BatchGetImage",
-             "ecr:DeleteRepositoryPolicy",
-             "ecr:GetDownloadUrlForLayer",
-             "ecr:GetImage",
-             "ecr:GetRepositoryPolicy",
-             "ecr:SetRepositoryPolicy"
-           ],
-           "Condition": {
-             "StringLike": {
-               "aws:sourceArn": "arn:aws:lambda:ap-northeast-1:747280000000:function"
-              }    
-           } 
-         }
-       ]
-   }
+2. **ECRのリポジトリに許可を追加（sh使用すれば自動設定）**
+   - IAMポリシー例:
+      ```json
+     {
+        "Version": "2008-10-17",
+        "Statement": [
+          {
+            "Sid": "LambdaECRImageRetrievalPolicy",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            },
+            "Action": [
+              "ecr:BatchGetImage",
+              "ecr:DeleteRepositoryPolicy",
+              "ecr:GetDownloadUrlForLayer",
+              "ecr:GetImage",
+              "ecr:GetRepositoryPolicy",
+              "ecr:SetRepositoryPolicy"
+            ],
+            "Condition": {
+              "StringLike": {
+                "aws:sourceArn": "arn:aws:lambda:ap-northeast-1:747280103911:function:*"
+              }
+            }
+          }
+        ]
+      }
