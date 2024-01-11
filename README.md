@@ -8,16 +8,16 @@
 ### 設定手順
 
 1. **GitHubのSecretに環境変数の情報を登録**
-   - `AWS_ACCOUNT_ID`: 747280000000
-   - `AWS_REGION`: ap-northeast-1
-   - `AWS_ROLE_TO_ASSUME`: arn:aws:iam::747280000000:oidc-provider/token.actions.githubusercontent.com
-   - `AWS_ACCESS_KEY_ID`: [アクセスキーID]
-   - `AWS_SECRET_ACCESS_KEY`: [シークレットアクセスキー]
+    - `AWS_ACCOUNT_ID`: 747280000000
+    - `AWS_REGION`: ap-northeast-1
+    - `AWS_ROLE_TO_ASSUME`: arn:aws:iam::747280000000:oidc-provider/token.actions.githubusercontent.com
+    - `AWS_ACCESS_KEY_ID`: [アクセスキーID]
+    - `AWS_SECRET_ACCESS_KEY`: [シークレットアクセスキー]
 
 2. **ECRのリポジトリに許可を追加**
-   - IAMポリシー例:
-     ```json
-     {
+- IAMポリシー例:
+   ```json
+   {
        "Version": "2008-10-17",
        "Statement": [
          {
@@ -37,4 +37,8 @@
            "Condition": {
              "StringLike": {
                "aws:sourceArn": "arn:aws:lambda:ap-northeast-1:747280000000:function
-     }
+              }    
+           } 
+         }
+       ]
+   }
