@@ -5,6 +5,6 @@ def lambda_handler(event, lambda_context):
         Tensho arai
     """
     try:
-        print("testtest")
+        print("test")
     except Exception as e:
         print(str(e))
