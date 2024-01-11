@@ -20,11 +20,24 @@ confirm() {
   esac
 }
 
+set_policy() {
+  policy=$(cat ./cloudformation/ecr_policy.json)
+  aws ecr set-repository-policy --repository-name "${REPOSITORY_NAME}" --policy-text "$policy" --region "${AWS_REGION}"
+}
+
 if confirm "リポジトリ '${REPOSITORY_NAME}' を作成してもよろしいですか？"; then
   # Amazon ECR リポジトリを作成
   result=$(aws ecr create-repository --repository-name "${REPOSITORY_NAME}" --region "${AWS_REGION}" 2>&1)
   if [ $? -eq 0 ]; then
     echo "リポジトリの作成が完了しました。"
+    echo "ポリシーを設定しています..."
+    set_policy
+    if [ $? -eq 0 ]; then
+      echo "ポリシーの設定が完了しました。"
+    else
+      echo "エラー: ポリシーの設定に失敗しました。"
+      exit 1
+    fi
   else
     echo "エラー: リポジトリの作成に失敗しました。"
     echo "$result"
