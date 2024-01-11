@@ -36,7 +36,7 @@
            ],
            "Condition": {
              "StringLike": {
-               "aws:sourceArn": "arn:aws:lambda:ap-northeast-1:747280000000:function
+               "aws:sourceArn": "arn:aws:lambda:ap-northeast-1:747280000000:function"
               }    
            } 
          }
