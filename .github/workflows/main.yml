@@ -7,12 +7,10 @@ on:
 #    tags:
 #      - v*  # 'v' で始まるタグに反応（例: v1.0.0）
 
-env:
-  GITHUB_ACTION_EXEC: false
-
 jobs:
   extract-commit-message:
-    if: env.GITHUB_ACTION_EXEC == 'true'
+    # GITHUB_ACTION_EXEC default false
+    if: false
     runs-on: ubuntu-latest
     outputs:
       repository-name: ${{ steps.extract-repo-name.outputs.repository-name }}
