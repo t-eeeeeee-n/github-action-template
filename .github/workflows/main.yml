@@ -40,6 +40,14 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-session-name: GitHubActions
 
+      # ECR リポジトリの存在確認と作成
+      - name: Check and Create ECR Repository
+        id: create-ecr
+        run: |
+          REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
+          aws ecr describe-repositories --repository-names ${REPOSITORY_NAME} || \
+          aws ecr create-repository --repository-name ${REPOSITORY_NAME}
+
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
 
