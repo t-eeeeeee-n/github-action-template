@@ -1,5 +1,5 @@
 {
-  "Version": "2012-10-17",
+  "Version": "2008-10-17",
   "Statement": [
     {
       "Sid": "LambdaECRImageRetrievalPolicy",
@@ -8,16 +8,16 @@
         "Service": "lambda.amazonaws.com"
       },
       "Action": [
+        "ecr:BatchGetImage",
+        "ecr:DeleteRepositoryPolicy",
         "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage"
+        "ecr:GetImage",
+        "ecr:GetRepositoryPolicy",
+        "ecr:SetRepositoryPolicy"
       ],
-      "Resource": "arn:aws:ecr:ap-northeast-1:747280103911:repository/github-action-template",
       "Condition": {
-        "ArnLike": {
-          "aws:SourceArn": "arn:aws:lambda:ap-northeast-1:747280103911:function:*"
-        },
-        "StringEquals": {
-          "aws:SourceAccount": "747280103911"
+        "StringLike": {
+          "aws:sourceArn": "arn:aws:lambda:ap-northeast-1:747280103911:function:*"
         }
       }
     }
