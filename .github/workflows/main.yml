@@ -4,13 +4,9 @@ on:
   push:
     branches:
       - 'main'
-#    tags:
-#      - v*  # 'v' で始まるタグに反応（例: v1.0.0）
 
 jobs:
   extract-commit-message:
-    # GITHUB_ACTION_EXEC default false
-#    if: false
     runs-on: ubuntu-latest
     outputs:
       repository-name: ${{ steps.extract-repo-name.outputs.repository-name }}
@@ -19,7 +15,7 @@ jobs:
       - id: extract-repo-name
         run: |
           repository_name=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)
-          echo "::set-output name=repository-name::${repository_name}"
+          echo "repository-name=${repository_name}" >> $GITHUB_OUTPUT
 
   push:
     if: ${{ needs.extract-commit-message.outputs.repository-name != ''}}
@@ -48,6 +44,12 @@ jobs:
           aws ecr describe-repositories --repository-names ${REPOSITORY_NAME} || \
           aws ecr create-repository --repository-name ${REPOSITORY_NAME}
 
+      # ECR リポジトリポリシーの設定
+      - name: Set ECR Repository Policy
+        run: |
+          REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
+          aws ecr set-repository-policy --repository-name ${REPOSITORY_NAME} --policy-text file://cloudformation/ecr_policy.json
+
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
 
@@ -60,7 +62,7 @@ jobs:
           docker build -t ${IMAGE_URI} . -f ./docker/Dockerfile
           docker push ${IMAGE_URI}
           
-          echo "::set-output name=repository-name::${REPOSITORY_NAME}"
+          echo "repository-name=${REPOSITORY_NAME}" >> $GITHUB_OUTPUT
 
   deploy:
     if: ${{ needs.push.outputs.repository-name != ''}}
