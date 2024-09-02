@@ -11,13 +11,13 @@
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage"
       ],
-      "Resource": "arn:aws:ecr:ap-northeast-1:747280103911:repository/github-action-template",
+      "Resource": "arn:aws:ecr:ap-northeast-1:747280103911:repository/*",
       "Condition": {
         "ArnLike": {
-          "aws:sourceArn": "arn:aws:lambda:ap-northeast-1:747280103911:function:*"
+          "aws:SourceArn": "arn:aws:lambda:ap-northeast-1:747280103911:function:*"
         },
         "StringEquals": {
-          "aws:sourceAccount": "747280103911"
+          "aws:SourceAccount": "747280103911"
         }
       }
     }
