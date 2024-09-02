@@ -49,7 +49,7 @@ jobs:
         run: |
           REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
           aws ecr set-repository-policy --repository-name ${REPOSITORY_NAME} --policy-text file://cloudformation/ecr_policy.json
-
+      次のステップ
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
 
