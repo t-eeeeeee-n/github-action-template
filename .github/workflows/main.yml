@@ -80,6 +80,16 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-session-name: GitHubActions
+      # ROLLBACK_COMPLETE 状態のスタックを削除
+      - name: Delete existing CloudFormation stack if in ROLLBACK_COMPLETE state
+        run: |
+          REPOSITORY_NAME=${{ needs.push.outputs.repository-name }}
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name ${REPOSITORY_NAME} --query "Stacks[0].StackStatus" --output text || echo "NONE")
+          if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "Deleting stack in ROLLBACK_COMPLETE state..."
+            aws cloudformation delete-stack --stack-name ${REPOSITORY_NAME}
+            aws cloudformation wait stack-delete-complete --stack-name ${REPOSITORY_NAME}
+          fi
 
       - name: Deploy to CloudFormation
         run: |
