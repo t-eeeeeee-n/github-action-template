@@ -42,7 +42,7 @@ jobs:
         run: |
           REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
           aws ecr describe-repositories --repository-names ${REPOSITORY_NAME} || \
-          aws ecr create-repository --repository-name ${REPOSITORY_NAME}
+          (aws ecr create-repository --repository-name ${REPOSITORY_NAME} || true)
 
       # ECR リポジトリポリシーの設定
       - name: Set ECR Repository Policy
