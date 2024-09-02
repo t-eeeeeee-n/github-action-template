@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - 'main'
+#    tags:
+#      - v*  # 'v' で始まるタグに反応（例: v1.0.0）
 
 jobs:
   extract-commit-message:
+    # GITHUB_ACTION_EXEC default false
+    if: false
     runs-on: ubuntu-latest
     outputs:
       repository-name: ${{ steps.extract-repo-name.outputs.repository-name }}
