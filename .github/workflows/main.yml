@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # AWS  認証
+      # AWS 認証
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-region: ${{ secrets.AWS_REGION }}
@@ -45,14 +45,32 @@ jobs:
         id: create-ecr
         run: |
           REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
-          aws ecr describe-repositories --repository-names ${REPOSITORY_NAME} || \
-          (aws ecr create-repository --repository-name ${REPOSITORY_NAME} || true)
+          
+          # ECRリポジトリの存在確認
+          if aws ecr describe-repositories --repository-names ${REPOSITORY_NAME}; then
+            echo "ECR repository ${REPOSITORY_NAME} already exists."
+          else
+            echo "ECR repository ${REPOSITORY_NAME} does not exist. Creating..."
+            aws ecr create-repository --repository-name ${REPOSITORY_NAME}
+            if [ $? -ne 0 ]; then
+              echo "Failed to create ECR repository ${REPOSITORY_NAME}"
+              exit 1
+            fi
+          fi      
 
       # ECR リポジトリポリシーの設定
       - name: Set ECR Repository Policy
         run: |
           REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
-          aws ecr set-repository-policy --repository-name ${REPOSITORY_NAME} --policy-text file://cloudformation/ecr_policy.json
+          
+          # AWSアカウントIDを取得
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          
+          # アカウントIDを動的に挿入して、一時的なポリシーファイルを作成
+          sed "s/{{AWS_ACCOUNT_ID}}/${AWS_ACCOUNT_ID}/g" cloudformation/ecr_policy.json > ecr_policy_temp.json
+          
+          # ECRリポジトリにポリシーを設定
+          aws ecr set-repository-policy --repository-name ${REPOSITORY_NAME} --policy-text file://ecr_policy_temp.json
 
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
