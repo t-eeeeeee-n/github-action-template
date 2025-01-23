@@ -1,0 +1,92 @@
+# deployなし pushまで
+name: ECR Push Image with Commit Message
+
+on:
+  push:
+    branches:
+      - 'main'
+#    tags:
+#      - v*  # 'v' で始まるタグに反応（例: v1.0.0）
+
+jobs:
+  extract-commit-message:
+    # GITHUB_ACTION_EXEC default false
+    if: true
+    runs-on: ubuntu-latest
+    outputs:
+      repository-name: ${{ steps.extract-repo-name.outputs.repository-name }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: extract-repo-name
+        run: |
+          repository_name=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)
+          echo "repository-name=${repository_name}" >> $GITHUB_OUTPUT
+
+  check-and-create-ecr:
+    if: ${{ needs.extract-commit-message.outputs.repository-name != ''}}
+    runs-on: ubuntu-latest
+    needs: extract-commit-message
+    outputs:
+      repository-name: ${{ steps.check-ecr.outputs.repository-name }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      # AWS認証を設定
+      - uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: GitHubActions
+
+      # ECRリポジトリが存在するか確認
+      - name: Check if ECR Repository Exists
+        id: check-ecr
+        run: |
+          REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
+          if aws ecr describe-repositories --repository-names "${REPOSITORY_NAME}" > /dev/null 2>&1; then
+            echo "Repository already exists"
+            echo "repository-created=false" >> $GITHUB_OUTPUT
+          else
+            echo "repository-created=true" >> $GITHUB_OUTPUT
+          fi
+
+          echo "repository-name=${REPOSITORY_NAME}" >> $GITHUB_OUTPUT
+
+      # 必要に応じてECRリポジトリを作成
+      - name: Create ECR Repository if Not Exists
+        id: create-ecr
+        if: ${{ steps.check-ecr.outputs.repository-created == 'true' }}
+        run: |
+          REPOSITORY_NAME=${{ needs.extract-commit-message.outputs.repository-name }}
+          aws ecr create-repository --repository-name "${REPOSITORY_NAME}"
+
+  push:
+    runs-on: ubuntu-latest
+    needs: check-and-create-ecr
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      # リポジトリをチェックアウト
+      - uses: actions/checkout@v3
+
+      # AWS認証を設定
+      - uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: GitHubActions
+
+      # ECRにログイン
+      - uses: aws-actions/amazon-ecr-login@v1
+
+      # DockerイメージをビルドしてECRにプッシュ
+      - name: Build and push Docker image
+        run: |
+          REPOSITORY_NAME=${{ needs.check-and-create-ecr.outputs.repository-name }}
+          IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${REPOSITORY_NAME}:${{ github.sha }}"
+          docker build -t ${IMAGE_URI} . -f ./docker/Dockerfile
+          docker push ${IMAGE_URI}
+
+#          echo "repository-name=${REPOSITORY_NAME}" >> $GITHUB_OUTPUT
